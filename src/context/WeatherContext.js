@@ -8,6 +8,7 @@ export const WeatherProvider = ({ children }) => {
   const [circle, setCircle] = useState(null);
   const [circleSelected, setCircleSelected] = useState(false);
   const [reportData, setReportData] = useState(null);
+const [region, setRegion] = useState("");
 const [loadingStates, setLoadingStates] = useState({
   todayWeather: false,
   forecast: false,
@@ -15,6 +16,7 @@ const [loadingStates, setLoadingStates] = useState({
   map: false,
   idw: false,
 });
+
 
 
   return (
@@ -36,6 +38,7 @@ const [loadingStates, setLoadingStates] = useState({
         setTheme,
         reportData,
         setReportData,
+     region, setRegion
       }}
     >
       {children}

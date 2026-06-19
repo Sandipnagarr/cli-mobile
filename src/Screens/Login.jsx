@@ -1,17 +1,11 @@
 import React, { useState } from "react";
 import AsyncStorage from "@react-native-async-storage/async-storage";
-import {
-  Alert,
-  Pressable,
-  StyleSheet,
-  Text,
-  TextInput,
-  View,
-} from "react-native";
-
+import {Alert,Pressable,StyleSheet,Text,TextInput,View} from "react-native";
 import { useContext } from "react";
 import { WeatherContext } from "../context/WeatherContext";
 import { defaultTheme } from "../theme";
+import { Image } from "react-native";
+import Logo from "../../assets/MLLogo.png"; // update path as needed
 const Login = ({ onLogin }) => {
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
@@ -19,19 +13,80 @@ const Login = ({ onLogin }) => {
   const { theme } = useContext(WeatherContext);
   const safeTheme = theme || defaultTheme;
   const styles = createStyles(safeTheme);
-  const Loginhandel = async () => {
-    const normalizedUsername = username.trim();
+  // const Loginhandel = async () => {
+  //   const normalizedUsername = username.trim();
 
-    if (!normalizedUsername || !password) {
-      Alert.alert("Missing details", "Please fill all the fields.");
-      return;
-    }
+  //   if (!normalizedUsername || !password) {
+  //     Alert.alert("Missing details", "Please fill all the fields.");
+  //     return;
+  //   }
 
-    try {
-      setIsLoading(true);
+  //   try {
+  //     setIsLoading(true);
 
-      const response = await fetch("https://mlinfomap.org/mlwapi/userLogin", {
+  //     const response = await fetch("https://mlinfomap.org/mlwapi/userLogin", {
         
+  //       method: "POST",
+  //       headers: {
+  //         "Content-Type": "application/json",
+  //       },
+  //       body: JSON.stringify({
+  //         username: normalizedUsername,
+  //         userpassword: password,
+  //       }),
+  //     });
+  //     const data = await response.json();
+      
+  //     if (!response.ok) {
+  //       Alert.alert(
+  //         "Login failed",
+  //         data?.msg || data?.message || "Unable to login.",
+  //       );
+  //       return;
+  //     }
+
+  //     const loginPayload = data?.data || {};
+  //     const token = loginPayload?.token;
+  //     const user = loginPayload?.resultUser;
+
+  //     if (!token) {
+  //       Alert.alert("Login failed", "Login response did not include a token.");
+  //       return;
+  //     }
+
+  //     // if (user) {
+  //     //   await AsyncStorage.setItem("user", JSON.stringify(user));
+  //     //   await AsyncStorage.setItem("token", token);
+  //     // }
+  //     // ALWAYS save token
+
+  //     // Save user only if exists
+  //     if (user) {
+  //       await AsyncStorage.setItem("user", JSON.stringify(user));
+  //       await AsyncStorage.setItem("token", token);
+  //     }
+  //     onLogin?.();
+  //   } catch (error) {
+  //     console.log("Login error:", error);
+  //     Alert.alert("Server error", "Could not connect to ML Weather server.");
+  //   } finally {
+  //     setIsLoading(false);
+  //   }
+  // };
+const Loginhandel = async () => {
+  const normalizedUsername = username.trim();
+
+  if (!normalizedUsername || !password) {
+    Alert.alert("Missing details", "Please fill all the fields.");
+    return;
+  }
+
+  try {
+    setIsLoading(true);
+
+    const response = await fetch(
+      "https://mlinfomap.org/mlwapi/userLogin",
+      {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -40,51 +95,131 @@ const Login = ({ onLogin }) => {
           username: normalizedUsername,
           userpassword: password,
         }),
-      });
-      const data = await response.json();
-      
-      if (!response.ok) {
-        Alert.alert(
-          "Login failed",
-          data?.msg || data?.message || "Unable to login.",
-        );
-        return;
       }
+    );
 
-      const loginPayload = data?.data || {};
-      const token = loginPayload?.token;
-      const user = loginPayload?.resultUser;
+    const data = await response.json();
 
-      if (!token) {
-        Alert.alert("Login failed", "Login response did not include a token.");
-        return;
-      }
+    console.log("LOGIN RESPONSE => ", JSON.stringify(data, null, 2));
 
-      // if (user) {
-      //   await AsyncStorage.setItem("user", JSON.stringify(user));
-      //   await AsyncStorage.setItem("token", token);
-      // }
-      // ALWAYS save token
+    // Already logged in handling
+    if (
+      data?.status === "already_logged_in" ||
+      data?.error?.status === "already_logged_in"
+    ) {
+      const loginData = data?.data || {};
 
-      // Save user only if exists
-      if (user) {
-        await AsyncStorage.setItem("user", JSON.stringify(user));
-        await AsyncStorage.setItem("token", token);
-      }
-      onLogin?.();
-    } catch (error) {
-      console.log("Login error:", error);
-      Alert.alert("Server error", "Could not connect to ML Weather server.");
-    } finally {
-      setIsLoading(false);
+      Alert.alert(
+        "Already Logged In",
+        `${loginData?.name || normalizedUsername} is already logged in from ${
+          loginData?.loggedin_device || "another device"
+        }`,
+        [
+          {
+            text: "Cancel",
+            style: "cancel",
+          },
+          {
+            text: "Logout Other Device",
+            onPress: async () => {
+              try {
+                const logoutResponse = await fetch(
+                  "https://mlinfomap.org/mlwapi/force-logout",
+                  {
+                    method: "POST",
+                    headers: {
+                      "Content-Type": "application/json",
+                    },
+                    body: JSON.stringify({
+                      userId: loginData?.userid,
+                      logId: loginData?.log_id,
+                    }),
+                  }
+                );
+
+                const logoutData = await logoutResponse.json();
+
+                if (logoutData?.status === "success") {
+                  Alert.alert(
+                    "Success",
+                    logoutData?.msg ||
+                      "Other device logged out successfully"
+                  );
+
+                  // Try login again
+                  Loginhandel();
+                } else {
+                  Alert.alert(
+                    "Error",
+                    logoutData?.msg || "Unable to logout other device"
+                  );
+                }
+              } catch (err) {
+                console.log(err);
+                Alert.alert(
+                  "Error",
+                  "Unable to logout other device"
+                );
+              }
+            },
+          },
+        ]
+      );
+
+      return;
     }
-  };
 
+    if (!response.ok) {
+      Alert.alert(
+        "Login failed",
+        data?.msg || data?.message || "Unable to login."
+      );
+      return;
+    }
+
+    const loginPayload = data?.data || {};
+    const token = loginPayload?.token;
+    const user = loginPayload?.resultUser;
+
+    if (!token) {
+      Alert.alert(
+        "Login failed",
+        "Login response did not include a token."
+      );
+      return;
+    }
+
+    if (user) {
+      await AsyncStorage.setItem(
+        "user",
+        JSON.stringify(user)
+      );
+    }
+
+    await AsyncStorage.setItem("token", token);
+
+    onLogin?.();
+  } catch (error) {
+    console.log("Login error:", error);
+    Alert.alert(
+      "Server error",
+      "Could not connect to ML Weather server."
+    );
+  } finally {
+    setIsLoading(false);
+  }
+};
   return (
     <View style={styles.container}>
       <View style={styles.card}>
         {/* <Image source={Logo} style={styles.logo} /> */}
-        <Text style={styles.title}> User Login</Text>
+<Image source={Logo} style={styles.logo} />
+
+<Text style={styles.appTitle}>
+  Weather Intelligence & Alert System
+</Text>
+
+<Text style={styles.title}>User Login</Text>
 
         <TextInput
           placeholder="Username"
@@ -109,6 +244,10 @@ const Login = ({ onLogin }) => {
             {isLoading ? 'Logging...' : 'Login'}
           </Text>
         </Pressable>
+                <Text style={styles.copyright}>
+  © 2026 ML INFOMAP. All rights reserved.
+</Text>
+
       </View>
     </View>
   );
@@ -125,7 +264,7 @@ const createStyles = theme =>
       alignItems: 'center',
     },
     card: {
-      width: '90%',
+      width: '80%',
       maxWidth: 400,
       backgroundColor: theme.hover_card_bg,
       padding: 25,
@@ -138,7 +277,7 @@ const createStyles = theme =>
       borderWidth: 1,
     },
     title: {
-      fontSize: 20,
+      fontSize: 18,
       fontWeight: 'bold',
       textAlign: 'center',
       marginBottom: 25,
@@ -165,11 +304,26 @@ const createStyles = theme =>
       fontWeight: 'bold',
       fontSize: 16,
     },
-    logo: {
-      width: 100,
-      height: 100,
-      alignSelf: 'center',
-      marginBottom: 15,
-      resizeMode: 'contain',
-    },
+    appTitle: {
+  fontSize: 15,
+  fontWeight: "bold",
+  textAlign: "center",
+  color: "#0077c8",
+  marginBottom: 10,
+},
+
+logo: {
+  width: 80,
+  height: 80,
+  alignSelf: "center",
+  marginBottom: 15,
+  resizeMode: "contain",
+},
+  copyright: {
+  marginTop: 30,
+  textAlign: "center",
+  color: "#94a3b8",
+  fontSize: 12,
+},
+ 
   });

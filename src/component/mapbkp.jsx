@@ -5,6 +5,17 @@ import AsyncStorage from "@react-native-async-storage/async-storage";
 import { WeatherContext } from "../context/WeatherContext";
 import { fetchWeather } from "../api/Api";
 
+// const injectedConsoleBridge = `   // this would be removed if we're not using the logs//
+//   (function() {
+//     const oldLog = console.log;
+//     console.log = function(...args) {
+//       window.ReactNativeWebView.postMessage(args.join(" "));
+//       oldLog.apply(console, args);
+//     };
+//   })();
+//   true;
+// `;
+
 const IDW_ACTIVE_BUTTONS = {
   RAIN_IDW: "rainfall",
   WIND_IDW: "wind",
@@ -703,19 +714,12 @@ function loadCircles() {
     const select = document.getElementById("stateSelect");
     const circleOptions = res.data || [];
 
-    // select.innerHTML = "";
-
-    // const defaultOption = document.createElement("option");
-    // defaultOption.value = "All India";
-    // defaultOption.text = "All India";
-    // select.appendChild(defaultOption);
     select.innerHTML = "";
 
-circleOptions.sort((a, b) => {
-  if (a.label === "All India") return -1;
-  if (b.label === "All India") return 1;
-  return 0;
-});
+    const defaultOption = document.createElement("option");
+    defaultOption.value = "All India";
+    defaultOption.text = "All India";
+    select.appendChild(defaultOption);
 
     circleOptions.forEach((optionData) => {
       const option = document.createElement("option");
@@ -724,9 +728,6 @@ circleOptions.sort((a, b) => {
       option.setAttribute("data-coords", optionData.value || "");
       option.setAttribute("data-location-name",
         optionData.location_name || optionData.full_name || optionData.label
-      );
-      option.setAttribute("data-region-name",
-        optionData.full_name || optionData.label
       );
       select.appendChild(option);
     });
@@ -1719,13 +1720,11 @@ export default function Map({ webViewRef, setActiveIdwType, setIdwLoading}) {
     data,
     setCircle,
     setCircleSelected,
-    setRegion
   } = useContext(WeatherContext);
 
   
   const [token, setToken] = useState(null);
   const [webViewSource, setWebViewSource] = useState(null);
-
   useEffect(() => {
     AsyncStorage.getItem("token").then(setToken);
   }, []);
@@ -1743,7 +1742,6 @@ export default function Map({ webViewRef, setActiveIdwType, setIdwLoading}) {
         if (parsedUser?.location) {
           setLocation(parsedUser.location);
           setLocationName(parsedUser.location_name);
-          setRegion(parsedUser.full_name)
           setCircle(parsedUser.indus_circle);
         }
       } catch (error) {

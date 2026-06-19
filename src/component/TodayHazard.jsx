@@ -18,7 +18,7 @@ export default function TodayHazard() {
   const safeTheme = theme || defaultTheme;
   const styles = createStyles(safeTheme);
   const [accordian, showAccordian] = useState(false);
-  const [hazardData, setHazardData] = useState({});
+const [hazardData, setHazardData] = useState({});
 
 const getIcon = name => {
   return HAZARD_ICONS.find(item => item.name === name)?.icon;
@@ -40,14 +40,19 @@ const hazardIcons = {
       const response = await postrequest("/get-hazard-affected-district", {
         circle: circlePayload,
       });
-      console.log(response.data[0]);
+   
 
-    setHazardData(response.data);
+
+setHazardData(response.data?.[0] || {});
     } catch (error) {
       console.log("hazard error", error);
     }
   };
-
+const currentDate = new Date().toLocaleDateString('en-GB', {
+  day: '2-digit',
+  month: 'short',
+  year: 'numeric',
+});
   useEffect(() => {
     fetchhazarddata();
   // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -73,10 +78,9 @@ const hazardIcons = {
 
       {accordian && (
         <View>
-          <Text style={styles.sectionTitle}>
-            distribution of districts under varying Hazard category for today 22
-            May 2026.
-          </Text>
+        <Text style={styles.sectionTitle}>
+  Distribution of districts under varying Hazard category for today {currentDate}.
+</Text>
           <ScrollView horizontal showsHorizontalScrollIndicator>
             <View style={styles.table}>
               <View style={styles.headerRow}>

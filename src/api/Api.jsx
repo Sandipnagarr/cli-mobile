@@ -1,6 +1,7 @@
 import react from "react";
 import { API_URL } from "../config/Config";
 import AsyncStorage from "@react-native-async-storage/async-storage";
+import { globalLogout } from "../Navigation/AppNavigator";
 
 
 // Function to fetch weather data based on location
@@ -20,7 +21,15 @@ export const fetchWeather = async (location) => {
             },
             body: JSON.stringify({ q: location }),
         });
+if (response.status === 401 || response.status === 403) {
+  console.log("Session expired");
 
+  if (globalLogout) {
+    await globalLogout();
+  }
+
+  return null;
+}
         const data = await response.json();
         if (!response.ok) {
             console.log("Error fetching weather:", data?.msg || data?.message || "Unknown error");
@@ -40,19 +49,31 @@ export const postrequest = async (endpoint, payload) => {
         console.log("No token found");
         return;
       }
-    const response = await fetch(`https://mlinfomap.org/mlwapi/${endpoint}`, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: `Bearer ${token}`,
-      },
+const response = await fetch(
+  `https://mlinfomap.org/mlwapi/${endpoint}`,
+  {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${token}`,
+    },
+    body: JSON.stringify(payload),
+  }
+);
 
-    
-      body: JSON.stringify(payload),
-    });
+if (response.status === 401 || response.status === 403) {
+  console.log("Session expired");
 
-    const res = await response.json();
-    return res;
+  if (globalLogout) {
+    await globalLogout();
+  }
+
+  return null;
+}
+
+const res = await response.json();
+return res;
+
   } catch (error) {
     console.log("API Error:", error);
 

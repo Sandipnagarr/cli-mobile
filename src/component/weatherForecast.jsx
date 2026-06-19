@@ -18,6 +18,7 @@ export default function WeatherForecast() {
   const [activeButton, setactiveButton] = useState("Rainfall");
   const [accuData, setaccuData] = useState([]);
   const [districtData,setdistrictData]=useState([]);
+  const [legendData, setLegendData] = useState(null);
   const { theme,circle } = useContext(WeatherContext);
   const safeTheme = theme || defaultTheme;
   const styles = createStyles(safeTheme);
@@ -68,6 +69,42 @@ const getIcon = name => {
     Visibility: "Visibility Forecast - 7 Days",
     Temperature: "Temperature Forecast - 7 Days",
   };
+  const legendKeyMap = {
+  Rainfall: "rainfall",
+  Accu_Rainfall: "accu_rainfall",
+  Wind: "wind",
+  Humidity: "humidity",
+  Visibility: "visibility",
+  Temperature: "temperature",
+};
+const getLegendValues = () => {
+  if (!legendData) return [];
+
+  const key = legendKeyMap[activeButton];
+
+  return [
+    {
+      label: "Extreme",
+      color: legendData.severity_extreme_color,
+      range: legendData[`extreme_${key}`],
+    },
+    {
+      label: "High",
+      color: legendData.severity_high_color,
+      range: legendData[`high_${key}`],
+    },
+    {
+      label: "Moderate",
+      color: legendData.severity_moderate_color,
+      range: legendData[`moderate_${key}`],
+    },
+    {
+      label: "Low",
+      color: legendData.severity_low_color,
+      range: legendData[`low_${key}`],
+    },
+  ];
+};
 
   const fetchaquranfallapi = async () => {
     try {
@@ -95,10 +132,26 @@ const getIcon = name => {
       console.log("error in fetching distict name api",error)
   }
 }
+const fetchLegendData = async () => {
+  try {
+    const response = await postrequest("/fetch-kpi-range", {});
+
+    const circleKey = circle === "All India" ? "M&G" : circle;
+
+    const legend = response?.data?.[circleKey]?.[0];
+
+    setLegendData(legend);
+
+    console.log("Legend Data:", legend);
+  } catch (error) {
+    console.log("Legend API Error:", error);
+  }
+};
   useEffect(() => {
-    fetchaquranfallapi();
-    districnameapi();
-  }, )
+  fetchaquranfallapi();
+  districnameapi();
+  fetchLegendData();
+}, [circle]);
  
 
   const setActiveHaz = (tab) => {
@@ -155,25 +208,52 @@ const getIcon = name => {
     }
   };
 
-  const getSeverityStyle = (severity) => {
-    switch (severity?.toLowerCase()) {
-      case "extreme":
-        return { backgroundColor: "#ff0000" };
+  // const getSeverityStyle = (severity) => {
+  //   switch (severity?.toLowerCase()) {
+  //     case "extreme":
+  //       return { backgroundColor: "#ff0000" };
 
-      case "high":
-        return { backgroundColor: "#ffa500" };
+  //     case "high":
+  //       return { backgroundColor: "#ffa500" };
 
-      case "moderate":
-        return { backgroundColor: "#e6ff00" };
+  //     case "moderate":
+  //       return { backgroundColor: "#e6ff00" };
 
-      case "low":
-        return { backgroundColor: "#ffffff" };
+  //     case "low":
+  //       return { backgroundColor: "#ffffff" };
 
-      default:
-        return {};
-    }
-  };
- 
+  //     default:
+  //       return {};
+  //   }
+  // };
+ const getSeverityStyle = (severity) => {
+  if (!legendData) return {};
+
+  switch (severity?.toLowerCase()) {
+    case "extreme":
+      return {
+        backgroundColor: legendData.severity_extreme_color,
+      };
+
+    case "high":
+      return {
+        backgroundColor: legendData.severity_high_color,
+      };
+
+    case "moderate":
+      return {
+        backgroundColor: legendData.severity_moderate_color,
+      };
+
+    case "low":
+      return {
+        backgroundColor: legendData.severity_low_color,
+      };
+
+    default:
+      return {};
+  }
+};
   const getDateLabels = () => {
     const today = new Date();
     const datesRange = [];
@@ -193,6 +273,35 @@ const getIcon = name => {
     return datesRange;
   };
   const datesRange = getDateLabels();
+
+
+
+
+  const getAccuDateRange = (startOffset, endOffset) => {
+  if (!accuData?.data?.length) return "";
+
+  const baseDate = new Date(accuData.data[0].date);
+
+  const start = new Date(baseDate);
+  const end = new Date(baseDate);
+
+  start.setDate(start.getDate() + startOffset);
+  end.setDate(end.getDate() + endOffset);
+
+  return (
+    start.toLocaleDateString("en-GB", {
+      day: "2-digit",
+      month: "short",
+      year: "numeric",
+    }) +
+    " to " +
+    end.toLocaleDateString("en-GB", {
+      day: "2-digit",
+      month: "short",
+      year: "numeric",
+    })
+  );
+};
   return (
     <View style={styles.section}>
       <Pressable
@@ -237,130 +346,137 @@ const getIcon = name => {
 
           {/* Heading */}
           <View style={styles.headingContainer}>
-            <Text style={styles.headingText}>{headingMap[activeButton]}</Text>
+     <Text style={styles.headingText}>
+  {activeButton === "Accu_Rainfall"
+    ? "Accumulated Rainfall Forecast - 3 Days (mm)"
+    : headingMap[activeButton]}
+</Text>
           </View>
 
           {/* Legend */}
-          <View style={styles.legendRow}>
-            <Text style={styles.legendTitle}>Legend</Text>
+       <ScrollView
+  horizontal
+  showsHorizontalScrollIndicator={false}
+  contentContainerStyle={styles.legendRow}
+>
+  <Text style={styles.legendTitle}>Legend</Text>
 
-            <View style={styles.legendItem}>
-              <View style={[styles.legendBox, { backgroundColor: 'red' }]} />
-              <Text>Extreme</Text>
-            </View>
+  {getLegendValues().map((item, index) => (
+    <View key={index} style={styles.legendItem}>
+      <View
+        style={[
+          styles.legendBox,
+          {
+            backgroundColor: item.color,
+          },
+        ]}
+      />
 
-            <View style={styles.legendItem}>
-              <View style={[styles.legendBox, { backgroundColor: 'orange' }]} />
-              <Text>High</Text>
-            </View>
-
-            <View style={styles.legendItem}>
-              <View
-                style={[styles.legendBox, { backgroundColor: '#e6ff00' }]}
-              />
-              <Text>Moderate</Text>
-            </View>
-
-            <View style={styles.legendItem}>
-              <View style={[styles.legendBox, { backgroundColor: '#fff' }]} />
-              <Text>Low</Text>
-            </View>
-          </View>
+      <Text style={styles.legendText}>
+       {item.label} ({item.range})
+      </Text>
+    </View>
+  ))}
+</ScrollView>
 
           {/* Table */}
           <ScrollView horizontal>
             <View style={styles.table}>
               {/* Header */}
-              {activeButton === 'Temperature' ? (
-                <>
-                  <View style={styles.row}>
-                    <Text style={styles.districtHeader}>District</Text>
+{activeButton === "Accu_Rainfall" ? (
+  <View style={styles.row}>
+    <Text style={styles.headerCell}>Districts</Text>
 
-                    {datesRange.map(date => (
-                      <View key={date} style={styles.dateHeaderGroup}>
-                        <Text style={styles.dateHeader}>{date}</Text>
-                      </View>
-                    ))}
-                  </View>
+    <Text style={styles.accuHeaderCell}>
+      {getAccuDateRange(0, 2)}
+    </Text>
 
-                  <View style={styles.row}>
-                    <Text style={styles.districtHeader} />
+    <Text style={styles.accuHeaderCell}>
+      {getAccuDateRange(1, 3)}
+    </Text>
 
-                    {datesRange.map((_, index) => (
-                      <View key={index} style={styles.minMaxGroup}>
-                        <Text style={styles.minMaxHeader}>Min</Text>
-                        <Text style={styles.minMaxHeader}>Max</Text>
-                      </View>
-                    ))}
-                  </View>
-                </>
-              ) : (
-                <View style={styles.row}>
-                  <Text style={styles.headerCell}>District</Text>
+    <Text style={styles.accuHeaderCell}>
+      {getAccuDateRange(2, 4)}
+    </Text>
+  </View>
+) : activeButton === "Temperature" ? (
+  <>
+    <View style={styles.row}>
+      <Text style={styles.districtHeader}>District</Text>
 
-                  {datesRange.map(date => (
-                    <Text key={date} style={styles.headerCell}>
-                      {date}
-                    </Text>
-                  ))}
-                </View>
-              )}
+      {datesRange.map(date => (
+        <View key={date} style={styles.dateHeaderGroup}>
+          <Text style={styles.dateHeader}>{date}</Text>
+        </View>
+      ))}
+    </View>
+
+    <View style={styles.row}>
+      <Text style={styles.districtHeader} />
+
+      {datesRange.map((_, index) => (
+        <View key={index} style={styles.minMaxGroup}>
+          <Text style={styles.minMaxHeader}>Min</Text>
+          <Text style={styles.minMaxHeader}>Max</Text>
+        </View>
+      ))}
+    </View>
+  </>
+) : (
+  <View style={styles.row}>
+    <Text style={styles.headerCell}>District</Text>
+
+    {datesRange.map(date => (
+      <Text key={date} style={styles.headerCell}>
+        {date}
+      </Text>
+    ))}
+  </View>
+)}
 
               {/* Rows */}
-              {activeButton === 'Accu_Rainfall'
-                ? accuData?.data?.map(row => (
-                    <View key={row.district} style={styles.row}>
-                      <Text style={styles.districtCell}>{row.district}</Text>
+          {activeButton === "Accu_Rainfall"
+  ? accuData?.data?.map((row, index) => (
+      <View
+        key={`${row.district}-${index}`}
+        style={styles.row}
+      >
+        <Text style={styles.districtCell}>
+          {row.district}
+        </Text>
 
-                      <Text
-                        style={[
-                          styles.valueCell,
-                          getSeverityStyle(row.acc_1_to_3_severity),
-                        ]}
-                      >
-                        {row.acc_1_to_3}
-                      </Text>
+        <Text
+          style={[
+            styles.accuValueCell,
+            getSeverityStyle(row.acc_1_to_3_severity),
+          ]}
+        >
+          {row.acc_1_to_3} mm
+        </Text>
 
-                      <Text
-                        style={[
-                          styles.valueCell,
-                          getSeverityStyle(row.acc_2_to_4_severity),
-                        ]}
-                      >
-                        {row.acc_2_to_4}
-                      </Text>
+        <Text
+          style={[
+            styles.accuValueCell,
+            getSeverityStyle(row.acc_2_to_4_severity),
+          ]}
+        >
+          {row.acc_2_to_4} mm
+        </Text>
 
-                      <Text
-                        style={[
-                          styles.valueCell,
-                          getSeverityStyle(row.acc_3_to_5_severity),
-                        ]}
-                      >
-                        {row.acc_3_to_5}
-                      </Text>
-                    </View>
-                  ))
+        <Text
+          style={[
+            styles.accuValueCell,
+            getSeverityStyle(row.acc_3_to_5_severity),
+          ]}
+        >
+          {row.acc_3_to_5} mm
+        </Text>
+      </View>
+    ))
+          
                 : districtData?.[0]?.district_wise_kpi_values?.map(row => (
                     <View key={row.district} style={styles.row}>
                       <Text style={styles.districtCell}>{row.district}</Text>
-
-                      {/* {datesRange.map((_, index) => {
-                        const dayData = row[`day${index + 1}`];
-                        const cellData = getCellData(dayData);
-
-                        return (
-                          <Text
-                            key={index}
-                            style={[
-                              styles.valueCell,
-                              getSeverityStyle(cellData.severity),
-                            ]}
-                          >
-                            {cellData.value}
-                          </Text>
-                        );
-                      })}
-                     */}
 
                       {datesRange.map((_, index) => {
                         const dayData = row[`day${index + 1}`];
@@ -391,15 +507,23 @@ const getIcon = name => {
                        }
 
                         return (
-                          <Text
-                            key={index}
-                            style={[
-                              styles.valueCell,
-                              getSeverityStyle(cellData.severity),
-                            ]}
-                          >
-                            {cellData.value}
-                          </Text>
+                        <Text
+  key={index}
+  style={[
+    styles.valueCell,
+    getSeverityStyle(cellData.severity),
+  ]}
+>
+  {activeButton === "Rainfall"
+    ? `${cellData.value} mm`
+    : activeButton === "Wind"
+    ? `${cellData.value} kmph`
+    : activeButton === "Humidity"
+    ? `${cellData.value} %`
+    : activeButton === "Visibility"
+    ? `${cellData.value} km`
+    : cellData.value}
+</Text>
                         );
                       })}
                     </View>
@@ -456,7 +580,7 @@ const createStyles = safeTheme =>
     },
 
     activeHazardButton: {
-      backgroundColor: '#9c027d',
+      backgroundColor: safeTheme.active_button_color,
     },
 
     hazardButtonText: {
@@ -480,7 +604,6 @@ const createStyles = safeTheme =>
 
     legendRow: {
       flexDirection: 'row',
-      flexWrap: 'wrap',
       alignItems: 'center',
       padding: 10,
       gap: 20,
@@ -593,4 +716,23 @@ const createStyles = safeTheme =>
       padding: 8,
       fontSize: 10,
     },
+    accuHeaderCell: {
+  width: 180,
+  borderWidth: 1,
+  borderColor: "#0080d6",
+  padding: 8,
+  textAlign: "center",
+  fontWeight: "700",
+  backgroundColor: "#f0f0f0",
+  fontSize: 10,
+},
+
+accuValueCell: {
+  width: 180,
+  borderWidth: 1,
+  borderColor: "#0080d6",
+  padding: 8,
+  textAlign: "center",
+  fontSize: 10,
+},
   });

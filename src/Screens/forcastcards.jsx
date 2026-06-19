@@ -15,16 +15,12 @@ import FontAwesome5 from 'react-native-vector-icons/FontAwesome5';
 
 export default function ForecastCards() {
   const { data, theme } = useContext(WeatherContext);
-  // const styles = createStyles(theme);
   const safeTheme = theme || defaultTheme;
   const styles = createStyles(safeTheme);
   const [showHourly, setShowHourly] = useState(true);
   const [showDaily, setShowDaily] = useState(false);
   const scrollRef = useRef(null);
 
-  // if (!data) {
-  //   return <Text>Loading forecast...</Text>;
-  // }
 
   // ---------- SIMPLE STRUCTURE ----------
   const forecastDays = data?.forecast?.forecastday || [];
@@ -88,7 +84,7 @@ export default function ForecastCards() {
         >
           Hourly Forecast
         </Text>
-        <Text style={styles.arrow}>{showHourly ? "▲" : "▼"}</Text>
+    
       </Pressable>
 
       {showHourly && (

@@ -23,7 +23,7 @@ export default function ReportScreen() {
         <TodayParameter />
         <TodayHazard />
         <WeatherForecast />
-        {/* <BadHazard/> */}
+        <BadHazard/>
       </ScrollView>
     </SafeAreaView>
   );

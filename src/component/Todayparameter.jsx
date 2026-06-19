@@ -67,8 +67,13 @@ const weatherParams = [
     label: 'Temp (min)',
   },
 ];
+const currentDate = new Date().toLocaleDateString('en-GB', {
+  day: '2-digit',
+  month: 'short',
+  year: 'numeric',
+});
     return (
-      <>
+
         <View style={styles.section}>
           <Pressable
             style={[
@@ -92,7 +97,7 @@ const weatherParams = [
             <View>
               <Text style={styles.sectionTitle}>
                 Distribution of districts under varying Hazard category for
-                today {new Date().toLocaleDateString()}
+                today {currentDate}
               </Text>
 
               <ScrollView horizontal showsHorizontalScrollIndicator>
@@ -191,7 +196,7 @@ const weatherParams = [
             </View>
           )}
         </View>
-      </>
+  
     );
 }
 
@@ -249,15 +254,15 @@ const createStyles = (safeTheme) =>
     },
 
     extremeHeader: {
-      backgroundColor: "red",
+      backgroundColor: safeTheme.extreme_color,
     },
 
     highHeader: {
-      backgroundColor: "orange",
+      backgroundColor:   safeTheme.high_color,
     },
 
     moderateHeader: {
-      backgroundColor: "#e6ff00",
+      backgroundColor:  safeTheme.moderate_color,
     },
 
     lowHeader: {
@@ -273,7 +278,6 @@ const createStyles = (safeTheme) =>
       borderWidth: 1,
       borderColor: "#0080d6",
     },
-
     valueCell: {
       width: 220,
       fontSize: 10,
@@ -287,7 +291,7 @@ const createStyles = (safeTheme) =>
       width: 30,
       height: 30,
       borderRadius: 15,
-      backgroundColor: "#0080d6",
+         backgroundColor: safeTheme.primary_button_bg,
 
       justifyContent: "center",
       alignItems: "center",

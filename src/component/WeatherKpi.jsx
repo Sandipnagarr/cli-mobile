@@ -3,13 +3,17 @@ import { View, Text, StyleSheet, Image, ActivityIndicator } from 'react-native';
 import { WeatherContext } from "../context/WeatherContext";
 import { postrequest } from "../api/Api";
 import { HAZARD_ICONS } from '../Icon';
+import { defaultTheme } from '../theme';
 
 
 const radius = 110;
 export default function WeatherKpi() {
-  const { circle, locationName, data } = useContext(WeatherContext);
+  const { circle, locationName, theme } = useContext(WeatherContext);
   const [weatherKPIs, setWeatherKPIs] = useState([]);
 const [weatherLoading, setWeatherLoading] = useState(true);
+const safeTheme = theme || defaultTheme;
+  const styles = createStyles(safeTheme);
+
   
   useEffect(() => {
     fetchweatherKPIs();
@@ -129,8 +133,8 @@ const [weatherLoading, setWeatherLoading] = useState(true);
    </>
  );
 }
-
-const styles = StyleSheet.create({
+const createStyles = (safeTheme) =>
+  StyleSheet.create({
   wrapper: {
     backgroundColor: '#fff',
     margin: 15,
@@ -140,6 +144,7 @@ const styles = StyleSheet.create({
   },
 
   heading: {
+    color:safeTheme.text_on_light_bg,
     fontWeight: '700',
     fontSize: 20,
     marginBottom: 40,
@@ -161,7 +166,7 @@ const styles = StyleSheet.create({
     width: 120,
     height: 120,
     borderRadius: 55,
-    backgroundColor: '#add8e6',
+    backgroundColor: safeTheme.hover_card_bg,
     justifyContent: 'space-between',
     alignItems: 'center',
     paddingVertical: 15,
@@ -179,13 +184,13 @@ const styles = StyleSheet.create({
   icon: {
     width: 40,
     height: 40,
-    backgroundColor: '#08437a',
+     backgroundColor: safeTheme.primary_button_bg,
     borderRadius: 20,
     justifyContent: 'center',
     alignItems: 'center',
   },
   location: {
-    color: '#093188',
+    color: safeTheme.secondary_text_color,
     fontWeight: '600',
     marginLeft: 10, // add left spacing
   },

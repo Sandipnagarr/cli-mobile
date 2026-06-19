@@ -66,7 +66,6 @@ export default function IDW({ webViewRef, setLoading, activeType = null }) {
       showsHorizontalScrollIndicator={false}
       contentContainerStyle={{ paddingHorizontal: 8 }}
     >
-      {' '}
       <View style={styles.container}>
         {IDW_OPTIONS.map(option => (
           <Pressable

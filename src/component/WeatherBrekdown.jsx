@@ -26,7 +26,6 @@ export default function WeatherBreakdown() {
       });
       const data = await response;
       setReportData(data);
-      // console.log("Report API Response:", JSON.stringify(data, null, 2));
     }
     catch(error){
       console.log("Report API Error:", error);
@@ -81,8 +80,11 @@ export default function WeatherBreakdown() {
         reportData.day1.Temperature_Min.extreme||null,
       ],
     ],
-
-    barColors: ["#facc15", "#fb923c", "#ef4444",],
+barColors: [
+  safeTheme.moderate_color,
+  safeTheme.high_color,
+  safeTheme.extreme_color,
+],
   };
   
 

@@ -314,7 +314,7 @@ const formatTempCards = (data) => {
   );
 };
 
-const createStyles = (theme) =>
+const createStyles = (safeTheme) =>
   StyleSheet.create({
     wrapper: {
       backgroundColor: "#ffffff",
@@ -357,7 +357,7 @@ const createStyles = (theme) =>
       width: 30,
       height: 30,
       borderRadius: 15,
-      backgroundColor: theme.primary_icon_color,
+      backgroundColor: safeTheme.primary_icon_color,
       alignItems: "center",
       justifyContent: "center",
     },
@@ -396,13 +396,13 @@ const createStyles = (theme) =>
       justifyContent: "center",
     },
     extremeBox: {
-      backgroundColor: "#ef5350",
+      backgroundColor: safeTheme.extreme_color,
     },
     highBox: {
-      backgroundColor: "#ffb74d",
+      backgroundColor:   safeTheme.high_color,
     },
     moderateBox: {
-      backgroundColor: "#fff176",
+      backgroundColor:   safeTheme.moderate_color,
     },
     tempMinExtreme: {
       backgroundColor: "#3d7fe0", // dark blue
@@ -456,7 +456,7 @@ const createStyles = (theme) =>
       width: 32,
       height: 32,
       borderRadius: 16,
-      backgroundColor: "#0078c8",
+      backgroundColor: safeTheme.primary_button_bg,
 
       justifyContent: "center",
       alignItems: "center",

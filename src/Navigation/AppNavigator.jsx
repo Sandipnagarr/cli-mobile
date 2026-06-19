@@ -5,7 +5,7 @@ import Loginscreen from "../Screens/Login.jsx";
 import TabNavigator from "./TabNavigator.jsx";
 
 const SHOW_LOGIN_ON_EVERY_OPEN = false;
-
+export let globalLogout = null;   ///added for global logout
 export default function AppNavigator() {
   const [isLoggedIn, setIsLoggedIn] = useState(true);
   const [isCheckingAuth, setIsCheckingAuth] = useState(true);
@@ -55,6 +55,7 @@ export default function AppNavigator() {
       setIsLoggedIn(false);
     }
   };
+  globalLogout = handleLogout;  // added for global logout
 
   if (isCheckingAuth) {
     return (

@@ -1,5 +1,5 @@
 import React, { useState, useContext } from "react";
-import { View, TextInput,StyleSheet,Pressable } from "react-native";
+import { View, TextInput,StyleSheet,Pressable,Text  } from "react-native";
 import { WeatherContext } from "../context/WeatherContext";
 import { defaultTheme } from "../theme";
 
@@ -63,12 +63,12 @@ export default function SearchBar({ webViewRef }) {
         onChangeText={setQuery}
         style={styles.input}
       />
-      <Pressable
-        style={styles.Button}
-        title="Search"
-        color={safeTheme.primary_button_bg}
-        onPress={handleSearch}
-      />
+    <Pressable
+  style={styles.Button}
+  onPress={handleSearch}
+>
+  <Text style={styles.buttonText}>Search</Text>
+</Pressable>
     </View>
   );
 }
@@ -89,10 +89,20 @@ const createStyles = (safeTheme) =>
       padding: 8,
       marginRight: 8,
     },
+
     Button: {
-      backgroundColor: safeTheme.primary_button_bg,
-      color: "white",
-    },
+  backgroundColor: safeTheme.primary_button_bg,
+  paddingHorizontal: 16,
+  paddingVertical: 10,
+  borderRadius: 6,
+  justifyContent: "center",
+  alignItems: "center",
+},
+
+buttonText: {
+  color: "white",
+  fontWeight: "bold",
+},
   });
 
   /**

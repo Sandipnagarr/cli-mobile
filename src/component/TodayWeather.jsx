@@ -20,7 +20,7 @@ export default function TodayWeather() {
   const [user, setUser] = useState(null);
   const [weatherLoading, setWeatherLoading] = useState(true);
   const [loading, setLoading] = useState(false);
-  const { data, setData, locationName, theme } = useContext(WeatherContext);
+  const { data, setData, locationName, theme, region } = useContext(WeatherContext);
   const safeTheme = theme || defaultTheme;
   const styles = createStyles(safeTheme);
 
@@ -69,6 +69,24 @@ useEffect(() => {
       setLoading(false);
     }
   };
+
+  const formatDate = (dateString) => {
+  const d = new Date(dateString);
+
+  const day = d.toLocaleDateString("en-GB", { weekday: "short" });
+  const date = d.toLocaleDateString("en-GB", {
+    day: "2-digit",
+    month: "short",
+    year: "numeric",
+  });
+  const time = d.toLocaleTimeString("en-GB", {
+    hour: "2-digit",
+    minute: "2-digit",
+    hour12: false,
+  });
+
+  return `${day}, ${date}, ${time}`;
+};
   const getIcon = name => HAZARD_ICONS.find(item => item.name === name)?.icon;
   const currentHour = new Date().getHours();
 
@@ -76,118 +94,6 @@ useEffect(() => {
 
   const rainPercent = currentHourData?.chance_of_rain ?? 0;
   const rainMM = currentHourData?.precip_mm ?? 0;
-
-  // return (
-  
-  //   weatherLoading ?
-  //     // <SafeAreaView style={styles.safe}>
-  //     <ScrollView contentContainerStyle={styles.container}>
-  //       {/* LOCATION */}
-  //       <Text style={styles.location}>
-  //         {locationName
-  //           ? `${locationName}, ${data?.location?.region ?? ''}`
-  //           : 'Location not found'}
-  //       </Text>
-
-  //       {/* WEATHER BOX */}
-  //       <View style={styles.box}>
-  //         <Text style={styles.title}>TODAY'S WEATHER</Text>
-  //         <Text style={styles.date}>
-  //           {data?.location?.localtime || 'Time not found'}
-  //         </Text>
-  //         {/* TOP */}
-  //         <View style={styles.topRow}>
-  //           <Text style={styles.percent}>{rainPercent ?? 0}%</Text>
-  //           <View style={{ marginLeft: 20 }}>
-  //             <Text style={styles.small}>Rain Probability</Text>
-  //             <Text style={styles.bold}>{rainMM ?? 0} mm</Text>
-  //           </View>
-  //         </View>
-  //         {/* CONDITION + ICON */}
-  //         <View style={{ flexDirection: 'row', alignItems: 'center' }}>
-  //           <Image
-  //             source={{
-  //               uri: `https:${data?.current?.condition?.icon}`,
-  //             }}
-  //             // eslint-disable-next-line react-native/no-inline-styles
-  //             style={{ width: 40, height: 40, marginRight: 8 }}
-  //           />
-
-  //           <Text style={styles.condition}>
-  //             {data?.current?.condition?.text || 'Condition not available'}
-  //           </Text>
-  //         </View>
-  //         {/* DETAILS LIST */}
-  //         <View style={styles.grid}>
-  //           {[
-  //             {
-  //               icon: getIcon('temprature'),
-  //               label: 'Temp',
-  //               value: `${data?.current?.temp_c}°C`,
-  //             },
-  //             {
-  //               icon: getIcon('temprature'),
-  //               label: 'Feels',
-  //               value: `${data?.current?.feelslike_c}°C`,
-  //             },
-  //             {
-  //               icon: getIcon('Wind'),
-  //               label: 'Wind',
-  //               value: `${data?.current?.wind_kph} kmph`,
-  //             },
-  //             {
-  //               icon: getIcon('Compass'),
-  //               label: 'Direction',
-  //               value: data?.current?.wind_dir,
-  //             },
-  //             {
-  //               icon: getIcon('Pressure'),
-  //               label: 'Pressure',
-  //               value: `${data?.current?.pressure_mb} mb`,
-  //             },
-  //             {
-  //               icon: getIcon('Eye'),
-  //               label: 'Visibility',
-  //               value: `${data?.current?.vis_km} km`,
-  //             },
-  //             {
-  //               icon: getIcon('Sunny'),
-  //               label: 'UV',
-  //               value: data?.current?.uv,
-  //             },
-  //             {
-  //               icon: getIcon('Drop'),
-  //               label: 'Humidity',
-  //               value: `${data?.current?.humidity}%`,
-  //             },
-  //           ].map((item, i) => (
-  //             <View key={i} style={styles.card}>
-  //               <Image
-  //                 source={item.icon}
-  //                 style={{
-  //                   width: 25,
-  //                   height: 25,
-  //                   tintColor: '#FFFFFF',
-  //                 }}
-  //                 resizeMode="contain"
-  //               />
-
-  //               <View style={styles.cardContent}>
-  //                 <Text style={styles.cardValue}>{item.value}</Text>
-  //                 <Text style={styles.cardLabel}>{item.label}</Text>
-  //               </View>
-  //             </View>
-  //           ))}
-  //         </View>
-  //         {/* REFRESH BUTTON */}
-  //         <Pressable onPress={refreshCurrentWeather}>
-  //           <Text style={styles.refresh}>
-  //             {loading ? 'Refreshing...' : 'Refresh: ↻'}
-  //           </Text>
-  //         </Pressable>
-  //       </View>
-  //     </ScrollView> : ''
-  // );
 if (weatherLoading) {
   return (
     <View
@@ -208,18 +114,22 @@ return (
   <ScrollView contentContainerStyle={styles.container}>
     {/* LOCATION */}
     <Text style={styles.location}>
-      {locationName
-        ? `${locationName}, ${data?.location?.region ?? ''}`
-        : 'Location not found'}
+      {
+  locationName
+    ? `${locationName}, ${data?.location?.region || 'Maharashtra'}`
+    : 'Location not found'
+}
     </Text>
 
     {/* WEATHER BOX */}
     <View style={styles.box}>
       <Text style={styles.title}>TODAY'S WEATHER</Text>
 
-      <Text style={styles.date}>
-        {data?.location?.localtime || 'Time not found'}
-      </Text>
+     <Text style={styles.date}>
+  {data?.location?.localtime
+    ? formatDate(data.location.localtime)
+    : "Time not found"}
+</Text>
 
       <View style={styles.topRow}>
         <Text style={styles.percent}>{rainPercent ?? 0}%</Text>
@@ -330,7 +240,7 @@ const createStyles = safeTheme =>
     },
 
     location: {
-      color: '#093188',
+      color: safeTheme.secondary_text_color,
       fontWeight: '600',
       marginBottom: 8,
     },
@@ -350,7 +260,7 @@ const createStyles = safeTheme =>
 
     date: {
       fontSize: 12,
-      color: '#6b7280',
+      color: safeTheme.text_on_light_bg,
       marginBottom: 10,
     },
 
@@ -367,7 +277,7 @@ const createStyles = safeTheme =>
 
     small: {
       fontSize: 12,
-      color: '#6b7280',
+      color: safeTheme.text_on_light_bg,
     },
 
     bold: {
@@ -376,7 +286,7 @@ const createStyles = safeTheme =>
 
     condition: {
       marginBottom: 10,
-      color: '#374151',
+      color: safeTheme.text_on_light_bg,
     },
 
     list: {
@@ -416,7 +326,7 @@ const createStyles = safeTheme =>
     grid: {
       flexDirection: 'row',
       flexWrap: 'wrap',
-      justifyContent: 'space-between',
+      justifyContent: 'space-around',
       marginTop: 10,
     },
 
@@ -432,13 +342,13 @@ const createStyles = safeTheme =>
     },
 
     cardContent: {
-      marginLeft: 20, // increase from 10 to 15 or 20
+      marginLeft: 15, // increase from 10 to 15 or 20
       flex: 1,
     },
 
     cardValue: {
       color: '#fff',
-      fontSize: 16,
+      fontSize: 12,
       fontWeight: 'bold',
     },
 

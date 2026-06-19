@@ -1,50 +1,56 @@
-import React, { useState, useContext, useEffect, useEffectEvent } from "react";
-import { View, Text, Pressable, StyleSheet, ScrollView,Image } from "react-native";
+import React, { useState, useContext, useEffect, useEffectEvent } from 'react';
+import {
+  View,
+  Text,
+  Pressable,
+  StyleSheet,
+  ScrollView,
+  Image,
+} from 'react-native';
 import { HAZARD_ICONS } from '../Icon';
-import { postrequest } from "../api/Api";
+import { postrequest } from '../api/Api';
 
-
-import { WeatherContext } from "../context/WeatherContext";
-import { defaultTheme } from "../theme";
+import { WeatherContext } from '../context/WeatherContext';
+import { defaultTheme } from '../theme';
 
 export default function Hazard() {
   const [activeHazard, setActiveHazard] = useState(null);
   const [hazardTypes, setHazardTypes] = useState([]);
   const [showHazard, setShowHazard] = useState(false);
   const [severityTypes, setSeverityTypes] = useState([]);
-  const [selectedSeverity, setSelectedSeverity] = useState("All");
+  const [selectedSeverity, setSelectedSeverity] = useState('All');
   const [showDropdown, setShowDropdown] = useState(false);
   const [hazard, setHazard] = useState([]);
   const { theme, circle } = useContext(WeatherContext);
   const safeTheme = theme || defaultTheme;
   const styles = createStyles(safeTheme);
-  
 
   const getIcon = name => {
     return HAZARD_ICONS.find(icon => icon.name === name)?.icon;
   };
-const hazardIcons = {
-  Rainfall: getIcon('Rainfall'),
-  Wind: getIcon('Wind'),
-  Humidity: getIcon('Drop'),
-  Fog: getIcon('Fog'),
-  Temperature: getIcon('temprature'),
-  'Heat Wave': getIcon('temprature'),
-  Thunderstorm: getIcon('Thunderstorm'),
-  Snowfall: getIcon('snowflake'),
-};
+  const hazardIcons = {
+    Rainfall: getIcon('Rainfall'),
+    Wind: getIcon('Wind'),
+    Humidity: getIcon('Drop'),
+    Fog: getIcon('Fog'),
+    Temperature: getIcon('temprature'),
+    'Heat Wave': getIcon('temprature'),
+    Thunderstorm: getIcon('Thunderstorm'),
+    Snowfall: getIcon('Snowfall'),
+    Lightning:getIcon('Lightning')
+  };
   // ================================
   // FETCH HAZARD TYPES
   // ================================
   const fetchHazardTypes = useEffectEvent(async () => {
+    
+  let circlePayload = circle === "All India" ? "M&G" : circle;
     try {
-      const json = await postrequest("get-ndma-hazards-list", {
+      const json = await postrequest('get-ndma-hazards-list', {
         params: {
-          circle: circle,
+          circle: circlePayload,
         },
       });
-
-      // console.log("HAZARD TYPES:", JSON.stringify(json, null, 2));
 
       const data = json?.data || [];
 
@@ -52,12 +58,12 @@ const hazardIcons = {
 
       // auto select first tab
       if (data.length > 0) {
-        const first = data[0] === "Rainfall" ? "Rain" : data[0];
+        const first = data[0] === 'Rainfall' ? 'Rain' : data[0];
 
         setActiveHazard(first);
       }
     } catch (error) {
-      console.log("Hazard type error:", error);
+      console.log('Hazard type error:', error);
     }
   });
 
@@ -66,20 +72,20 @@ const hazardIcons = {
   // ================================
   const fetchSeverity = useEffectEvent(async () => {
     try {
-      const json = await postrequest("get-ndma-severity-list", {
+      
+     let circlePayload = circle === "All India" ? "M&G" : circle;
+      const json = await postrequest('get-ndma-severity-list', {
         params: {
-          circle: circle,
+          circle: circlePayload,
           hazardType: activeHazard,
         },
       });
 
-      // console.log("SEVERITY RESPONSE:", JSON.stringify(json, null, 2));
-
       const data = json?.data || [];
 
-      const severityList = ["All"];
+      const severityList = ['All'];
 
-      data.forEach((item) => {
+      data.forEach(item => {
         if (item?.severity) {
           severityList.push(item.severity);
         }
@@ -87,29 +93,28 @@ const hazardIcons = {
 
       setSeverityTypes(severityList);
     } catch (error) {
-      console.log("Severity error:", error);
+      console.log('Severity error:', error);
     }
-  
   });
 
   // ================================
   // FETCH HAZARD DATA
   // ================================
   const fetchHazardCurrentDay = useEffectEvent(async () => {
+    
+  let circlePayload = circle === "All India" ? "M&G" : circle;
     try {
-      const json = await postrequest("get-ndma-today-disasters", {
+      const json = await postrequest('get-ndma-today-disasters', {
         params: {
           hazardType: activeHazard,
           severityType: selectedSeverity,
-          circle: circle,
+          circle: circlePayload,
         },
       });
 
-      // console.log("FULL RESPONSE: disaster", JSON.stringify(json, null, 2));
-
       const features = json?.data?.features || [];
 
-      const hazardData = features.map((item) => ({
+      const hazardData = features.map(item => ({
         id: item.id,
         district: item.properties?.district,
         state: item.properties?.state_ut,
@@ -124,7 +129,7 @@ const hazardIcons = {
 
       setHazard(hazardData);
     } catch (error) {
-      console.log("Hazard fetch error:", error);
+      console.log('Hazard fetch error:', error);
     }
   });
 
@@ -158,14 +163,14 @@ const hazardIcons = {
           style={[
             styles.tabTitle,
             {
-              color: showHazard ? safeTheme.secondary_text_color : "#fff",
+              color: showHazard ? safeTheme.secondary_text_color : '#fff',
             },
           ]}
         >
-          Weather Hazards
+    Hazard / Bad Weather
         </Text>
 
-        <Text style={styles.arrow}>{showHazard ? "▲" : "▼"}</Text>
+        <Text style={styles.arrow}>{showHazard ? '▲' : '▼'}</Text>
       </Pressable>
 
       {/* BODY */}
@@ -175,15 +180,15 @@ const hazardIcons = {
           <Text style={styles.label}>Hazard Type</Text>
 
           <View style={styles.hazardTabs}>
-            {hazardTypes.map((item) => {
+            {hazardTypes.map(item => {
               const selected =
-                activeHazard === (item === "Rainfall" ? "Rain" : item);
+                activeHazard === (item === 'Rainfall' ? 'Rain' : item);
 
               return (
                 <Pressable
                   key={item}
                   onPress={() =>
-                    setActiveHazard(item === "Rainfall" ? "Rain" : item)
+                    setActiveHazard(item === 'Rainfall' ? 'Rain' : item)
                   }
                   style={[
                     styles.hazardButton,
@@ -192,8 +197,8 @@ const hazardIcons = {
                 >
                   <View
                     style={{
-                      flexDirection: "row",
-                      alignItems: "center",
+                      flexDirection: 'row',
+                      alignItems: 'center',
                       gap: 6,
                     }}
                   >
@@ -209,8 +214,9 @@ const hazardIcons = {
 
                     <Text
                       style={{
-                        color: "#fff",
-                        fontWeight: "bold",
+                        color: '#fff',
+                        fontWeight: 'bold',
+                        fontSize: 12,
                       }}
                     >
                       {item}
@@ -284,7 +290,7 @@ const hazardIcons = {
                     styles.tableRow,
                     {
                       backgroundColor:
-                        item.raw?.properties?.severity_color || "#fff",
+                        item.raw?.properties?.severity_color || '#fff',
                     },
                   ]}
                 >
@@ -303,9 +309,11 @@ const hazardIcons = {
 
           {/* NO DATA */}
           {hazard.length === 0 && (
-            <Text style={styles.noData}>
-              No data found for selected filters.
-            </Text>
+            <View>
+              <Text style={styles.noData}>
+                No data found for selected filters.
+              </Text>
+            </View>
           )}
         </View>
       )}
@@ -313,13 +321,12 @@ const hazardIcons = {
   );
 }
 
-
-const createStyles = (safeTheme) =>
+const createStyles = safeTheme =>
   StyleSheet.create({
     accordionTab: {
-      flexDirection: "row",
-      justifyContent: "space-between",
-      alignItems: "center",
+      flexDirection: 'row',
+      justifyContent: 'space-between',
+      alignItems: 'center',
       paddingVertical: 12,
       paddingHorizontal: 15,
       backgroundColor: safeTheme.primary_button_bg,
@@ -331,33 +338,33 @@ const createStyles = (safeTheme) =>
 
     tabTitle: {
       flex: 1,
-      textAlign: "center",
+      textAlign: 'center',
       fontSize: 16,
-      fontWeight: "600",
+      fontWeight: '600',
     },
 
     arrow: {
-      position: "absolute",
+      position: 'absolute',
       right: 15,
-      color: "#fff",
+      color: '#fff',
     },
 
     hazardCard: {
-      backgroundColor: "#fff",
+      backgroundColor: '#fff',
       borderColor: safeTheme.primary_border_color,
       borderWidth: 1,
-      overflow: "hidden",
+      overflow: 'hidden',
     },
 
     label: {
       marginBottom: 6,
-      fontWeight: "600",
+      fontWeight: '600',
       color: safeTheme.secondary_text_color,
     },
 
     hazardTabs: {
-      flexDirection: "row",
-      flexWrap: "wrap",
+      flexDirection: 'row',
+      flexWrap: 'wrap',
       gap: 8,
       marginBottom: 12,
     },
@@ -395,27 +402,27 @@ const createStyles = (safeTheme) =>
     },
 
     tableHeader: {
-      flexDirection: "row",
+      flexDirection: 'row',
       backgroundColor: safeTheme.primary_button_bg,
     },
 
     tableRow: {
-      flexDirection: "row",
+      flexDirection: 'row',
 
       borderBottomWidth: 1,
       borderRightWidth: 1,
 
-      borderColor: "#d1d5db",
+      borderColor: '#d1d5db',
     },
 
     th: {
       width: 120,
 
-      fontWeight: "bold",
+      fontWeight: 'bold',
 
       fontSize: 12,
 
-      color: "#fff",
+      color: '#fff',
 
       paddingVertical: 10,
       paddingHorizontal: 8,
@@ -432,13 +439,13 @@ const createStyles = (safeTheme) =>
       borderLeftWidth: 1,
       borderTopWidth: 1,
 
-      borderColor: "#d1d5db",
+      borderColor: '#d1d5db',
 
       color: safeTheme.secondary_text_color,
     },
 
     noData: {
-      textAlign: "center",
+      textAlign: 'center',
       marginTop: 10,
       color: safeTheme.secondary_text_color,
     },
